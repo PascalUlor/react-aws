@@ -10,6 +10,14 @@
             "StackName": "amplify-reactaws-dev-121239",
             "StackId": "arn:aws:cloudformation:us-east-1:500635435418:stack/amplify-reactaws-dev-121239/d4d98fe0-9f41-11ea-a625-0a4f04019892",
             "AmplifyAppId": "dnz6flmyyqxnd"
+        },
+        "categories": {
+            "hosting": {
+                "amplifyhosting": {
+                    "appId": "dnz6flmyyqxnd",
+                    "type": "cicd"
+                }
+            }
         }
     }
 }
