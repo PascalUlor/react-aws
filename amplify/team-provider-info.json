@@ -17,6 +17,9 @@
                     "appId": "dnz6flmyyqxnd",
                     "type": "cicd"
                 }
+            },
+            "auth": {
+                "reactawsc2571a18": {}
             }
         }
     }

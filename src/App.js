@@ -1,6 +1,11 @@
 import React from 'react';
+import Amplify, { API, Storage} from "aws-amplify";
+import awsExports from "./aws-exports";
+import { withAuthenticator } from '@aws-amplify/ui-react';
 import logo from './logo.svg';
 import './App.css';
+
+Amplify.configure(awsExports);
 
 function App() {
   return (
@@ -23,4 +28,10 @@ function App() {
   );
 }
 
-export default App;
+// export default App;
+
+
+const authTheme = {navBar: {backgroundColor: '556cd6', border: 0, color: 0}}
+export default withAuthenticator(App, {
+includeGreetings: true, theme: authTheme
+});
