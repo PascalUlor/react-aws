@@ -69,7 +69,7 @@ const search =(myArray)=>{
  ********************************/
 
  app.get(path, (req, res) => {
-     axios.ge('https://jobs.github.com/positions.json?page=1')
+     axios.get('https://jobs.github.com/positions.json?page=1')
      .then(response =>{
          res.json(response.data);
      }).catch(err => console.log(err))
