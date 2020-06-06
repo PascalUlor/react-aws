@@ -133,7 +133,7 @@ app.get(path + '/city' + hashKeyPath + sortKeyPath, function(req, res) {
   //   }
   // }
   params[partitionKeyName] = req.params[partitionKeyName];
-  // params[sortKeyName] = req.params[sortKeyName], sortKeyType;
+  params[sortKeyName] = convertUrlType(req.params[sortKeyName], sortKeyType);
 
   let getItemParams = {
     TableName: tableName,
