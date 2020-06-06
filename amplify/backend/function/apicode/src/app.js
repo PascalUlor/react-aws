@@ -13,8 +13,6 @@ var awsServerlessExpressMiddleware = require('aws-serverless-express/middleware'
 var bodyParser = require('body-parser')
 var express = require('express')
 
-const axios = require('axios');
-
 AWS.config.update({ region: process.env.TABLE_REGION });
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
@@ -56,133 +54,177 @@ const convertUrlType = (param, type) => {
   }
 }
 
-const search =(myArray)=>{
-    for(let i = 0; i < myArray.length; i++) {
-        if(myArray[i].job.id === 'WEB-DEVELOPER') {
-            return myArray[i].salary_percentiles.percentile_50;
-        }
-    }
-}
-
 /********************************
  * HTTP Get method for list objects *
  ********************************/
 
- app.get(path, (req, res) => {
-     axios.ge('https://jobs.github.com/positions.json?page=1')
-     .then(response =>{
-         res.json(response.data);
-     }).catch(err => console.log(err))
- })
+app.get(path + hashKeyPath, function(req, res) {
+  var condition = {}
+  condition[partitionKeyName] = {
+    ComparisonOperator: 'EQ'
+  }
 
-// app.get(path + hashKeyPath, function(req, res) {
-//   var condition = {}
-//   condition[partitionKeyName] = {
-//     ComparisonOperator: 'EQ'
-//   }
+  if (userIdPresent && req.apiGateway) {
+    condition[partitionKeyName]['AttributeValueList'] = [req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH ];
+  } else {
+    try {
+      condition[partitionKeyName]['AttributeValueList'] = [ convertUrlType(req.params[partitionKeyName], partitionKeyType) ];
+    } catch(err) {
+      res.statusCode = 500;
+      res.json({error: 'Wrong column type ' + err});
+    }
+  }
 
-//   if (userIdPresent && req.apiGateway) {
-//     condition[partitionKeyName]['AttributeValueList'] = [req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH ];
-//   } else {
-//     try {
-//       condition[partitionKeyName]['AttributeValueList'] = [ convertUrlType(req.params[partitionKeyName], partitionKeyType) ];
-//     } catch(err) {
-//       res.statusCode = 500;
-//       res.json({error: 'Wrong column type ' + err});
-//     }
-//   }
+  let queryParams = {
+    TableName: tableName,
+    KeyConditions: condition
+  }
 
-//   let queryParams = {
-//     TableName: tableName,
-//     KeyConditions: condition
-//   }
-
-//   dynamodb.query(queryParams, (err, data) => {
-//     if (err) {
-//       res.statusCode = 500;
-//       res.json({error: 'Could not load items: ' + err});
-//     } else {
-//       res.json(data.Items);
-//     }
-//   });
-// });
+  dynamodb.query(queryParams, (err, data) => {
+    if (err) {
+      res.statusCode = 500;
+      res.json({error: 'Could not load items: ' + err});
+    } else {
+      res.json(data.Items);
+    }
+  });
+});
 
 /*****************************************
  * HTTP Get method for get single object *
  *****************************************/
 
-app.get(path + '/city' + hashKeyPath + sortKeyPath, function(req, res) {
+app.get(path + '/object' + hashKeyPath + sortKeyPath, function(req, res) {
   var params = {};
-  // if (userIdPresent && req.apiGateway) {
-  //   params[partitionKeyName] = req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH;
-  // } else {
-  //   params[partitionKeyName] = req.params[partitionKeyName];
-  //   try {
-  //     params[partitionKeyName] = convertUrlType(req.params[partitionKeyName], partitionKeyType);
-  //   } catch(err) {
-  //     res.statusCode = 500;
-  //     res.json({error: 'Wrong column type ' + err});
-  //   }
-  // }
-  // if (hasSortKey) {
-  //   try {
-  //     params[sortKeyName] = convertUrlType(req.params[sortKeyName], sortKeyType);
-  //   } catch(err) {
-  //     res.statusCode = 500;
-  //     res.json({error: 'Wrong column type ' + err});
-  //   }
-  // }
-  params[partitionKeyName] = req.params[partitionKeyName];
-  params[sortKeyName] = convertUrlType(req.params[sortKeyName], sortKeyType);
+  if (userIdPresent && req.apiGateway) {
+    params[partitionKeyName] = req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH;
+  } else {
+    params[partitionKeyName] = req.params[partitionKeyName];
+    try {
+      params[partitionKeyName] = convertUrlType(req.params[partitionKeyName], partitionKeyType);
+    } catch(err) {
+      res.statusCode = 500;
+      res.json({error: 'Wrong column type ' + err});
+    }
+  }
+  if (hasSortKey) {
+    try {
+      params[sortKeyName] = convertUrlType(req.params[sortKeyName], sortKeyType);
+    } catch(err) {
+      res.statusCode = 500;
+      res.json({error: 'Wrong column type ' + err});
+    }
+  }
 
   let getItemParams = {
     TableName: tableName,
     Key: params
   }
 
-  console.log('>>>>> DB Caching >>>>>');
-
   dynamodb.get(getItemParams,(err, data) => {
     if(err) {
       res.statusCode = 500;
       res.json({error: 'Could not load items: ' + err.message});
     } else {
-      // if (data.Item) {
-      //   res.json(data.Item);
-      // } else {
-      //   res.json(data) ;
-      // }
-      axios.get('https://api.teleport.org/api/urban_areas/slug%3A' + req.params + '/' + req.params[sortKeyName] + '/')
-      .then(response => {
-        let avgSalary = search(response.data.salaries);
-        console.log('>>>>>> fetch data from api')
-        let putItemParams = {
-          TableName: tableName,
-          Item: {
-            city: req.params[partitionKeyName],
-            category: req.params[sortKeyName],
-            "value": avgSalary
-          }
-        }
-        dynamodb.put(putItemParams, (err, data) =>{
-          if (err) {
-            console.log(err);
-            res.statusCode = 500;
-            res.json({error: err, url: req.url, body: req.body});
-          }
-          res.json(avgSalary);
-        });
-      }).catch(err =>{
-        res.json('N/A');
-        console.log(err)
-      })
+      if (data.Item) {
+        res.json(data.Item);
+      } else {
+        res.json(data) ;
+      }
     }
   });
 });
 
 
+/************************************
+* HTTP put method for insert object *
+*************************************/
+
+app.put(path, function(req, res) {
+
+  if (userIdPresent) {
+    req.body['userId'] = req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH;
+  }
+
+  let putItemParams = {
+    TableName: tableName,
+    Item: req.body
+  }
+  dynamodb.put(putItemParams, (err, data) => {
+    if(err) {
+      res.statusCode = 500;
+      res.json({error: err, url: req.url, body: req.body});
+    } else{
+      res.json({success: 'put call succeed!', url: req.url, data: data})
+    }
+  });
+});
+
+/************************************
+* HTTP post method for insert object *
+*************************************/
+
+app.post(path, function(req, res) {
+
+  if (userIdPresent) {
+    req.body['userId'] = req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH;
+  }
+
+  let putItemParams = {
+    TableName: tableName,
+    Item: req.body
+  }
+  dynamodb.put(putItemParams, (err, data) => {
+    if(err) {
+      res.statusCode = 500;
+      res.json({error: err, url: req.url, body: req.body});
+    } else{
+      res.json({success: 'post call succeed!', url: req.url, data: data})
+    }
+  });
+});
+
+/**************************************
+* HTTP remove method to delete object *
+***************************************/
+
+app.delete(path + '/object' + hashKeyPath + sortKeyPath, function(req, res) {
+  var params = {};
+  if (userIdPresent && req.apiGateway) {
+    params[partitionKeyName] = req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH;
+  } else {
+    params[partitionKeyName] = req.params[partitionKeyName];
+     try {
+      params[partitionKeyName] = convertUrlType(req.params[partitionKeyName], partitionKeyType);
+    } catch(err) {
+      res.statusCode = 500;
+      res.json({error: 'Wrong column type ' + err});
+    }
+  }
+  if (hasSortKey) {
+    try {
+      params[sortKeyName] = convertUrlType(req.params[sortKeyName], sortKeyType);
+    } catch(err) {
+      res.statusCode = 500;
+      res.json({error: 'Wrong column type ' + err});
+    }
+  }
+
+  let removeItemParams = {
+    TableName: tableName,
+    Key: params
+  }
+  dynamodb.delete(removeItemParams, (err, data)=> {
+    if(err) {
+      res.statusCode = 500;
+      res.json({error: err, url: req.url});
+    } else {
+      res.json({url: req.url, data: data});
+    }
+  });
+});
 app.listen(3000, function() {
-    console.log("========= App started ===========")
+    console.log("App started")
 });
 
 // Export the app object. When executing the application local this does nothing. However,
