@@ -76,7 +76,7 @@
 				"Timeout": "25",
 				"Code": {
 					"S3Bucket": "amplify-reactaws-dev-121239-deployment",
-					"S3Key": "amplify-builds/apicode-4a59714d4e6f47567852-build.zip"
+					"S3Key": "amplify-builds/apicode-61386467376448465777-build.zip"
 				}
 			}
 		},
