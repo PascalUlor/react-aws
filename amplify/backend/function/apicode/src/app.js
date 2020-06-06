@@ -147,12 +147,10 @@ app.get(path + '/city' + hashKeyPath + sortKeyPath, function(req, res) {
       res.statusCode = 500;
       res.json({error: 'Could not load items: ' + err.message});
     } else {
-      // if (data.Item) {
-      //   res.json(data.Item);
-      // } else {
-      //   res.json(data) ;
-      // }
-      axios.get('https://api.teleport.org/api/urban_areas/slug%3A' + req.params + '/' + req.params[sortKeyName] + '/')
+      if (data.Item) {
+        res.json(data.Item.value);
+      } else {
+        axios.get('https://api.teleport.org/api/urban_areas/slug%3A' + req.params[partitionKeyName] + '/' + req.params[sortKeyName] + '/')
       .then(response => {
         let avgSalary = search(response.data.salaries);
         console.log('>>>>>> fetch data from api')
@@ -176,6 +174,8 @@ app.get(path + '/city' + hashKeyPath + sortKeyPath, function(req, res) {
         res.json('N/A');
         console.log(err)
       })
+      }
+      
     }
   });
 });

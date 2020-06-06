@@ -10,7 +10,6 @@ Amplify.configure(awsconfig);
 function App() {
   return (
     <div className="App">
-    Home
       <Jobs/>
     </div>
   );

@@ -3,6 +3,10 @@ import React, { useState, useEffect } from 'react';
 
 let apiName = 'awsrest';
 let path = '/api/';
+const myInit = { // OPTIONAL
+    headers: {}, // OPTIONAL
+    response: true, // OPTIONAL (return the entire Axios response object instead of only response.data)
+};
 
 
 const processLocation = (location) =>{
@@ -35,8 +39,9 @@ export default function AvgSalary(props){
             return;
         }
         
-        API.get(apiName, path + 'city/' + locationVar + '/salaries', {response: true})
+        API.get(apiName, path + 'city/' + locationVar + '/salaries', myInit)
         .then(res => {
+            console.log('>>>>>>>>',res.data)
             let data = res.data;
             if(data !== 'N/A'){
                 data = data.toFixed(2);
@@ -44,4 +49,9 @@ export default function AvgSalary(props){
             setSalary(data);
         }).catch(err => console.log(err.response))
     }, [props.location]);
+    return salary ? (
+        <span>{salary}</span>
+    ) : (
+        <span>N/A</span>
+    )
 }
