@@ -41,7 +41,6 @@ export default function AvgSalary(props){
         
         API.get(apiName, path + 'city/' + locationVar + '/salaries', myInit)
         .then(res => {
-            console.log('>>>>>>>>',res.data)
             let data = res.data;
             if(data !== 'N/A'){
                 data = data.toFixed(2);
