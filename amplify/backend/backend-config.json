@@ -6,7 +6,7 @@
 		}
 	},
 	"auth": {
-		"reactawsc2571a18": {
+		"reactaws4eb56b86": {
 			"service": "Cognito",
 			"providerPlugin": "awscloudformation",
 			"dependsOn": [],

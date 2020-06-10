@@ -1,8 +1,8 @@
 {
-    "identityPoolName": "reactawsc2571a18_identitypool_c2571a18",
+    "identityPoolName": "reactaws4eb56b86_identitypool_4eb56b86",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "reactac2571a18",
-    "userPoolName": "reactawsc2571a18_userpool_c2571a18",
+    "resourceNameTruncated": "reacta4eb56b86",
+    "userPoolName": "reactaws4eb56b86_userpool_4eb56b86",
     "autoVerifiedAttributes": [
         "email"
     ],
@@ -28,10 +28,10 @@
     "userpoolClientReadAttributes": [
         "email"
     ],
-    "userpoolClientLambdaRole": "reactac2571a18_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "reacta4eb56b86_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "c2571a18",
-    "resourceName": "reactawsc2571a18",
+    "sharedId": "4eb56b86",
+    "resourceName": "reactaws4eb56b86",
     "authSelections": "identityPoolAndUserPool",
     "authRoleArn": {
         "Fn::GetAtt": [
@@ -46,6 +46,9 @@
         ]
     },
     "useDefault": "default",
+    "usernameAttributes": [
+        "email"
+    ],
     "userPoolGroupList": [],
     "dependsOn": []
 }
